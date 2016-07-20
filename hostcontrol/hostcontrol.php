@@ -11,7 +11,7 @@ function hostcontrol_getConfigArray()
 {
     hostcontrol_install_db();
 
-    $revision_date      = "2015-07-29";
+    $revision_date      = "2016-07-22";
     $revision_url_check = "http://www.hostcontrol.com/whmcs/version.txt";
     $download_text      = " <a href='http://www.hostcontrol.com/whmcs/latest.zip' target='_blank'>Click here to download the latest version</a>";
     $visit_changelog    = " <a href='http://www.hostcontrol.com/whmcs/' target='_blank'>Review the changelog</a>";
@@ -117,10 +117,14 @@ function hostcontrol_RegisterDomain($params = array())
         return array('error' => 'Could not create account for your domain: ' . $e->getMessage());
     }
 
-    /* Special .ru regulations */
-    if($params["tld"] == "ru")
+    /* Special TciRU regulations */
+    if(in_array($params["tld"], HostControlHelper::tld_extra_info()))
     {
-        HostControlHelper::tciru_process($params, $params['userid'], $api_client);
+        $updated_contact = HostControlHelper::tciru_process($params['userid'], $api_client);
+        if(is_array($updated_contact))
+        {
+            return $updated_contact;
+        }
     }
 
     $interval = $params["regperiod"]*12;
@@ -185,10 +189,14 @@ function hostcontrol_TransferDomain($params)
         return array('error' => $e->getMessage());
     }
 
-    /* Special .ru regulations */
-    if($params["tld"] == "ru")
+    /* Special TciRU regulations */
+    if(in_array($params["tld"], HostControlHelper::tld_extra_info()))
     {
-        HostControlHelper::tciru_process($params, $params['userid'], $api_client);
+        $updated_contact = HostControlHelper::tciru_process($params['userid'], $api_client);
+        if(is_array($updated_contact))
+        {
+            return $updated_contact;
+        }
     }
 
     $interval = $params["regperiod"]*12;
@@ -252,12 +260,6 @@ function hostcontrol_RenewDomain($params)
     $api_client = new HostControlAPIClient(HostControlHelper::getApiUrl($params), $params['ApiKey']);
     $domainname = strtolower($params["sld"] . "." . $params["tld"]);
     $interval = $params["regperiod"]*12;
-
-    /* Special .ru regulations */
-    if($params["tld"] == "ru")
-    {
-        HostControlHelper::tciru_process($params, $params['userid'], $api_client);
-    }
 
     try
     {

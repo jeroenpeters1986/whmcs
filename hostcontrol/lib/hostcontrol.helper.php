@@ -15,6 +15,7 @@ class HostControlHelper
     public static $production = true;
     public static $ignored_dns_types = array("NS", "SOA", "URL", "FRAME", "MXE");
     public static $tld_with_lock_support = array("com", "net", "org", "info", "biz", "name", "cc", "me", "tv", "us");
+    public static $tld_extra_info = array("ru");
 
     public static $status_info = array(
         'wait_for_approval'  => 'Waiting for your approval',
@@ -500,14 +501,17 @@ class HostControlHelper
     {
         if(empty($hostcontrol_contact_id))
         {
-            HostControlHelper::debugLog($hostcontrol_contact_id, 'contact-update-id_number-error', 'no hostcontrol contact_id', 'no hostcontrol contact_id');
-
-            return false;
+            return array('error' => 'No Hostcontrol contact could be found for customer, please login to Hostcontrol');
         }
 
         $id_owner_dob = array_pop($fields)['value'];
         $id_issued = array_pop($fields)['value'];
         $id_number = array_pop($fields)['value'];
+
+        if(empty($id_owner_dob) || empty($id_issued) || empty($id_number))
+        {
+            return array('error' => 'One or more of `IDNumber`, `issuedDate` or `birthDate` fields is missing in this customers profile!');
+        }
 
         $update_data = array(
             'name' => $existing_details->name,
@@ -533,24 +537,35 @@ class HostControlHelper
         try
         {
             $api_client->contact->update($hostcontrol_contact_id, $update_data);
+            return true;
         }
         catch(HostControlAPIClientError $e)
         {
-            HostControlHelper::debugLog($update_data, 'contact-update-id_number-error', '', $e->getMessage());
+            return array('error' => 'Updating .ru-specific contact information has gone wrong: ' . $e->getMessage());
         }
     }
 
     /**
      * TciRu specific actions to be performed on domain-tasks
-     * @param $params
      * @param $whmcs_user_id
      * @param $api_client
+     * @return bool|mixed
      */
-    public static function tciru_process($params, $whmcs_user_id, $api_client)
+    public static function tciru_process($whmcs_user_id, $api_client)
     {
         $add_fields = HostControlHelper::get_whmcs_client_additional_fields($whmcs_user_id);
+        if(! is_array($add_fields))
+        {
+            return array('error' => 'Could not get customer custom fields, have they been setup? See Hostcontrol module docs');
+        }
+
         $contact = HostControlHelper::get_hostcontrol_customer_contact($whmcs_user_id, $api_client);
-        HostControlHelper::update_contact_add_ru_idnumber($contact->id, $contact, $add_fields, $api_client);
+        if(is_array($contact) && ! empty($contact['error']))
+        {
+            return $contact;
+        }
+
+        return HostControlHelper::update_contact_add_ru_idnumber($contact->id, $contact, $add_fields, $api_client);
     }
 
     /**
@@ -570,6 +585,15 @@ class HostControlHelper
     public static function tld_has_lock_support($tld)
     {
         return array_key_exists($tld, self::$tld_with_lock_support);
+    }
+
+    /**
+     * Return array of tld's which require extra info for .ru
+     * @return array
+     */
+    public static function tld_extra_info()
+    {
+        return self::$tld_extra_info;
     }
 
     /**
@@ -655,7 +679,7 @@ class HostControlHelper
             return $results['customfields'];
         }
 
-        return $results;
+        return false;
     }
 
     /**
