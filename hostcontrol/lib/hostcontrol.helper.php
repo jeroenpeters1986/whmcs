@@ -493,47 +493,68 @@ class HostControlHelper
     }
 
     /**
-     * Update contact information
+     * Update contact information and add an idnumber for ru-registrar
      * @param $hostcontrol_contact_id
      * @param $existing_details
-     * @param $id_number
+     * @param $fields
      * @param $api_client
      * @return bool|mixed
      */
-    public static function update_contact_add_extra_idnumber($hostcontrol_contact_id, $existing_details, $id_number, $api_client)
+    public static function update_contact_add_ru_idnumber($hostcontrol_contact_id, $existing_details, $fields, $api_client)
     {
         if(empty($hostcontrol_contact_id))
         {
             HostControlHelper::debugLog($hostcontrol_contact_id, 'contact-update-id_number-error', 'no hostcontrol contact_id', 'no hostcontrol contact_id');
+
             return false;
         }
 
+        $id_owner_dob = array_pop($fields)['value'];
+        $id_issued = array_pop($fields)['value'];
+        $id_number = array_pop($fields)['value'];
+
+        $update_data = array(
+            'name' => $existing_details->name,
+            'country' => $existing_details->country->code,
+            'voice' => $existing_details->voice,
+            'address' => $existing_details->address,
+            'zipcode' => $existing_details->zipcode,
+            'city' => $existing_details->city,
+            'state' => $existing_details->state,
+            'email' => $existing_details->email,
+
+            'extra' => array(
+                'TciRu' => array(
+                    'IDNumber' => $id_number,
+                    'issuedDate' => $id_issued,
+                    'birthDate' => $id_owner_dob,
+                    'issuedByCity' => $existing_details->city,
+                    'issuedByCountry' => $existing_details->country->code,
+                )
+            )
+        );
+
         try
         {
-            $update_data = array(
-                'name' => $existing_details->name,
-                'country' => $existing_details->country->code,
-                'voice' => $existing_details->voice,
-                'address' => $existing_details->address,
-                'zipcode' => $existing_details->zipcode,
-                'city' => $existing_details->city,
-                'state' => $existing_details->state,
-                'email' => $existing_details->email,
-
-                'extra' => array(
-                    '51' => array('IDNumber' => $id_number)
-                )
-            );
-
-            logModuleCall('hostcontrol-CC', 'contact-update-CC', $hostcontrol_contact_id, print_r($update_data, 1));
             $api_client->contact->update($hostcontrol_contact_id, $update_data);
-            logModuleCall('cccccccmoooi', 'sfdsfdsadmooiedingetjes', print_r(array($hostcontrol_contact_id, $existing_details, $id_number), 1), 'got no mooiedingetjes');
-
         }
         catch(HostControlAPIClientError $e)
         {
-            logModuleCall('HostControl', 'update-contact-idnumber-error', $hostcontrol_contact_id, $e);
+            HostControlHelper::debugLog($update_data, 'contact-update-id_number-error', '', $e->getMessage());
         }
+    }
+
+    /**
+     * TciRu specific actions to be performed on domain-tasks
+     * @param $params
+     * @param $whmcs_user_id
+     * @param $api_client
+     */
+    public static function tciru_process($params, $whmcs_user_id, $api_client)
+    {
+        $add_fields = HostControlHelper::get_whmcs_client_additional_fields($whmcs_user_id);
+        $contact = HostControlHelper::get_hostcontrol_customer_contact($whmcs_user_id, $api_client);
+        HostControlHelper::update_contact_add_ru_idnumber($contact->id, $contact, $add_fields, $api_client);
     }
 
     /**
@@ -628,17 +649,17 @@ class HostControlHelper
      * @param $user_id
      * @return bool|int
      */
-    public static function get_whmcs_client_first_additional_field($user_id)
+    public static function get_whmcs_client_additional_fields($user_id)
     {
         $opts = array('stats' => false, 'clientid' => $user_id);
         $results = localAPI('getclientsdetails', $opts, 1);
 
-        if(! empty($results['customfields1']))
+        if(! empty($results['customfields']))
         {
-            return $results['customfields1'];
+            return $results['customfields'];
         }
 
-        return false;
+        return $results;
     }
 
     /**

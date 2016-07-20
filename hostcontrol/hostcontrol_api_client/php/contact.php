@@ -18,7 +18,7 @@ class Contact extends ResourceWrapper
     public function update($contact_id, $options)
     {
         $path = $this->get_request_path('single', array($contact_id));
-        return $this->apiclient->put($path, array($options));
+        return $this->apiclient->put($path, $options);
     }
 
     public function lookup($customer_id)
