@@ -14,6 +14,19 @@
 7. Insert your API key and click Save
 
 ### Changelog
+###### July 22, 2015
+ - Added BackOffice contact-functionality
+ - On registration of a .ru-domain, extra contact data will be synced to Hostcontrol
+ - To setup the extra functionality features:
+   - Login to the WHMCS Admin panel
+   - Go to setup -> Custom Client Fields
+   - Add three new custom fields in this order:
+     - idnumber
+     - idnumber_issued_date
+     - id_owner_date_of_birth
+   - Make sure these are the LAST THREE custom fields (e.g. give them a display order of 95, 96, 97)
+   - The date fields can have this regex `/^\d{4}-\d{2}-\d{4}$/`
+
 ###### July 30, 2015
  - Tested v6.0 compatibility
  - Created check to determine if tld has locking-support
@@ -27,8 +40,8 @@
 
 ###### February 18, 2014
 - Added new module configuration option: "Use Alternative Connect Port"
--- This will cause the module to connect to port 14739 and may resolve 'no response received' messages.
--- If your server is in Iran, please use this setting!
+  - This will cause the module to connect to port 14739 and may resolve 'no response received' messages.
+  - If your server is in Iran, please use this setting!
 - Added version detection. This allows you to quickly see if your module version is up-to-date. Go to “Setup -> Products/Services -> Domain Registrars” to see if you are using the latest version.
 
 ###### December 9, 2013
@@ -98,7 +111,7 @@ If you have any other questions, please contact us from your Reseller Area.
 
 ### Known issues
 - Auth-codes on domains which are waiting for auth-code
-- Auth-codes can only be resupplied by admins. We have tried to build this into the WHMCS-clientarea. Currently, - - WHMCS only lets us create WHMCS-clientarea addons for ACTIVE domains. So pending-transfer/waiting for auth-code transfer can not be modified by the client until the transfer is completed. The current solution is that the WHMCS admin, when receiving the (correct) auth-code, supplies the correct
+- Auth-codes can only be resupplied by admins. We have tried to build this into the WHMCS-clientarea. Currently, WHMCS only lets us create WHMCS-clientarea addons for ACTIVE domains. So pending-transfer/waiting for auth-code transfer can not be modified by the client until the transfer is completed. The current solution is that the WHMCS admin, when receiving the (correct) auth-code, supplies the correct
 
 The default nameservers you have set in the General Domain settings in WHMCS Administration panel are currently only set on newly registered domains. They will only be updated if the nameservers are: - not childnameservers - reachable on IP basis
 

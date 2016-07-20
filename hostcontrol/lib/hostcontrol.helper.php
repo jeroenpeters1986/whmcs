@@ -263,16 +263,12 @@ class HostControlHelper
      */
     public static function getApiUrl($params = array())
     {
-        //FIXME: REMOVE
-
-        return self::HOSTCONTROL_TEST_API_URL;
-
         if (! empty($params['AlternativePort']) && $params['AlternativePort'] == "on")
         {
             return self::HOSTCONTROL_PRODUCTION_ALTERNATIVE_API_URL;
         }
 
-        if (in_array($_SERVER['REMOTE_ADDR'], array("212.203.0.138", "192.168.0.185")))
+        if (in_array($_SERVER['REMOTE_ADDR'], array("212.203.0.138", "192.168.2.9")))
         {
             self::$production = false;
             return self::HOSTCONTROL_TEST_API_URL;
