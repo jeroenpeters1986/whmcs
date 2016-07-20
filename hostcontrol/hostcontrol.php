@@ -117,6 +117,17 @@ function hostcontrol_RegisterDomain($params = array())
         return array('error' => 'Could not create account for your domain: ' . $e->getMessage());
     }
 
+    if($params["tld"] == "ru")
+    {
+        $idnumber = HostControlHelper::get_whmcs_client_first_additional_field($params['userid']);
+
+        //HostControlHelper::get_hostcontrol_customer_contacts($hostcontrol_customer_id, $api_client);
+        $command = 'getclientsdetails';
+        $values = array('stats' => false, 'clientid' => 1);
+        $results = localAPI($command, $values, 1);
+        HostControlHelper::debugLog($params, 'jptest', array($params), print_r($params, 1));
+    }
+
     $interval = $params["regperiod"]*12;
     $privacy_protect = (empty($params["idprotection"])?false:true);
 
@@ -178,6 +189,7 @@ function hostcontrol_TransferDomain($params)
     {
         return array('error' => $e->getMessage());
     }
+
     $interval = $params["regperiod"]*12;
     $privacy_protect = (empty($params["idprotection"])?false:true);
     $authcode = (empty($params["transfersecret"])?'':$params["transfersecret"]);
@@ -262,6 +274,16 @@ function hostcontrol_GetNameservers($params)
 {
     $api_client = new HostControlAPIClient(HostControlHelper::getApiUrl($params), $params['ApiKey']);
     $domainname = strtolower($params["sld"] . "." . $params["tld"]);
+
+    $whmcs_user_id = 1;
+    $id_number = HostControlHelper::get_whmcs_client_first_additional_field($whmcs_user_id);
+    $contact = HostControlHelper::get_hostcontrol_customer_contact($whmcs_user_id, $api_client);
+    HostControlHelper::debugLog($params, 'idnumber_for_contact', $id_number . $contact->id, print_r($contact, 1));
+
+    HostControlHelper::update_contact_add_extra_idnumber($contact->id, $contact, $id_number, $api_client);
+
+    HostControlHelper::debugLog($params, 'idnumber_for_contact', 'mooI!', print_r($contact, 1));
+
 
     try
     {

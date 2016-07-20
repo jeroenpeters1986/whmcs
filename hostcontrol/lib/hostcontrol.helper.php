@@ -4,7 +4,7 @@ class HostControlHelperError extends Exception {}
 
 class HostControlHelper
 {
-    const HOSTCONTROL_TEST_API_URL = "https://resello.bo.hostcontrol-ote.com/api/v1";
+    const HOSTCONTROL_TEST_API_URL = "https://resello-1.bo.hostcontrol-ote.com/api/v1";
     const HOSTCONTROL_PRODUCTION_API_URL = "https://backoffice.hostcontrol.com/api/v1";
     const HOSTCONTROL_PRODUCTION_ALTERNATIVE_API_URL = "https://backoffice.hostcontrol.com:14739/api/v1";
 
@@ -263,6 +263,10 @@ class HostControlHelper
      */
     public static function getApiUrl($params = array())
     {
+        //FIXME: REMOVE
+
+        return self::HOSTCONTROL_TEST_API_URL;
+
         if (! empty($params['AlternativePort']) && $params['AlternativePort'] == "on")
         {
             return self::HOSTCONTROL_PRODUCTION_ALTERNATIVE_API_URL;
@@ -460,6 +464,79 @@ class HostControlHelper
     }
 
     /**
+     * Get the contact for a hostcontrol customer
+     * @param $whmcs_user_id
+     * @param $api_client
+     * @return bool|mixed
+     */
+    public static function get_hostcontrol_customer_contact($whmcs_user_id, $api_client)
+    {
+        /* Get or create HostControl customer ID */
+        try {
+            $hostcontrol_customer_id = HostControlHelper::get_or_create_hostcontrol_customer_id(array('userid' => $whmcs_user_id), $api_client);
+        }
+        catch(HostControlHelperError $e)
+        {
+            return array('error' => $e->getMessage());
+        }
+
+        try
+        {
+            $hostcontrol_contact = array_shift($api_client->contact->lookup($hostcontrol_customer_id));
+            return $hostcontrol_contact;
+        }
+        catch(HostControlAPIClientError $e)
+        {
+            logModuleCall('HostControl', 'lookup-contact-error', $hostcontrol_customer_id, $e);
+            return array('error' => $e->getMessage());
+        }
+    }
+
+    /**
+     * Update contact information
+     * @param $hostcontrol_contact_id
+     * @param $existing_details
+     * @param $id_number
+     * @param $api_client
+     * @return bool|mixed
+     */
+    public static function update_contact_add_extra_idnumber($hostcontrol_contact_id, $existing_details, $id_number, $api_client)
+    {
+        if(empty($hostcontrol_contact_id))
+        {
+            HostControlHelper::debugLog($hostcontrol_contact_id, 'contact-update-id_number-error', 'no hostcontrol contact_id', 'no hostcontrol contact_id');
+            return false;
+        }
+
+        try
+        {
+            $update_data = array(
+                'name' => $existing_details->name,
+                'country' => $existing_details->country->code,
+                'voice' => $existing_details->voice,
+                'address' => $existing_details->address,
+                'zipcode' => $existing_details->zipcode,
+                'city' => $existing_details->city,
+                'state' => $existing_details->state,
+                'email' => $existing_details->email,
+
+                'extra' => array(
+                    'IDNumber' => $id_number
+                )
+            );
+
+            logModuleCall('hostcontrol-CC', 'contact-update-CC', $hostcontrol_contact_id, print_r($update_data, 1));
+            $api_client->contact->update($hostcontrol_contact_id, $update_data);
+            logModuleCall('cccccccmoooi', 'sfdsfdsadmooiedingetjes', print_r(array($hostcontrol_contact_id, $existing_details, $id_number), 1), 'got no mooiedingetjes');
+
+        }
+        catch(HostControlAPIClientError $e)
+        {
+            logModuleCall('HostControl', 'update-contact-idnumber-error', $hostcontrol_contact_id, $e);
+        }
+    }
+
+    /**
      * Return array of supported DNS record types
      * @return array
      */
@@ -544,6 +621,24 @@ class HostControlHelper
     public static function get_whmcs_client_email_address($user_id)
     {
         return get_query_val('tblclients', 'email', array('id' => $user_id));
+    }
+
+    /**
+     * Get the first additional field for a WHMCS users
+     * @param $user_id
+     * @return bool|int
+     */
+    public static function get_whmcs_client_first_additional_field($user_id)
+    {
+        $opts = array('stats' => false, 'clientid' => $user_id);
+        $results = localAPI('getclientsdetails', $opts, 1);
+
+        if(! empty($results['customfields1']))
+        {
+            return $results['customfields1'];
+        }
+
+        return false;
     }
 
     /**

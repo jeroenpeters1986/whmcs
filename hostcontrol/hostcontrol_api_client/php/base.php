@@ -2,6 +2,7 @@
 
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'resource.php';
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'customer.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'contact.php';
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'domain.php';
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'order.php';
 
@@ -40,6 +41,7 @@ class HostControlAPIClient
 
         # Spawn resources
         $this->customer = new Customer($this);
+        $this->contact = new Contact($this);
         $this->domain = new Domain($this);
         $this->order = new Order($this);
     }
