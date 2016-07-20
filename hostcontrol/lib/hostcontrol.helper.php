@@ -521,7 +521,7 @@ class HostControlHelper
                 'email' => $existing_details->email,
 
                 'extra' => array(
-                    'IDNumber' => $id_number
+                    '51' => array('IDNumber' => $id_number)
                 )
             );
 
