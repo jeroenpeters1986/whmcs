@@ -14,7 +14,7 @@
 7. Insert your API key and click Save
 
 ### Changelog
-###### July 22, 2015
+###### July 22, 2016
  - Added BackOffice contact-functionality
  - On registration of a .ru-domain, extra contact data will be synced to Hostcontrol
  - To setup the extra functionality features:
