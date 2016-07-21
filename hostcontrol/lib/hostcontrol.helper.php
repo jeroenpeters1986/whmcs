@@ -269,7 +269,7 @@ class HostControlHelper
             return self::HOSTCONTROL_PRODUCTION_ALTERNATIVE_API_URL;
         }
 
-        if (in_array($_SERVER['REMOTE_ADDR'], array("212.203.0.138", "192.168.2.9")))
+        if (in_array($_SERVER['REMOTE_ADDR'], array("212.203.0.138", "192.168.2.9", "127.0.0.1")))
         {
             self::$production = false;
             return self::HOSTCONTROL_TEST_API_URL;
@@ -493,24 +493,15 @@ class HostControlHelper
      * Update contact information and add an idnumber for ru-registrar
      * @param $hostcontrol_contact_id
      * @param $existing_details
-     * @param $fields
+     * @param $params
      * @param $api_client
      * @return bool|mixed
      */
-    public static function update_contact_add_ru_idnumber($hostcontrol_contact_id, $existing_details, $fields, $api_client)
+    public static function update_contact_add_ru_properties($hostcontrol_contact_id, $existing_details, $params, $api_client)
     {
         if(empty($hostcontrol_contact_id))
         {
             return array('error' => 'No Hostcontrol contact could be found for customer, please login to Hostcontrol');
-        }
-
-        $id_owner_dob = array_pop($fields)['value'];
-        $id_issued = array_pop($fields)['value'];
-        $id_number = array_pop($fields)['value'];
-
-        if(empty($id_owner_dob) || empty($id_issued) || empty($id_number))
-        {
-            return array('error' => 'One or more of `IDNumber`, `issuedDate` or `birthDate` fields is missing in this customers profile!');
         }
 
         $update_data = array(
@@ -525,10 +516,10 @@ class HostControlHelper
 
             'extra' => array(
                 'TciRu' => array(
-                    'IDNumber' => $id_number,
-                    'issuedDate' => $id_issued,
-                    'birthDate' => $id_owner_dob,
-                    'issuedByCity' => $existing_details->city,
+                    'IDNumber' => $params['additionalfields']['Individuals Passport Number'],
+                    'issuedDate' => $params['additionalfields']['Individuals Passport Issue Date'],
+                    'birthDate' => $params['additionalfields']['Individuals Birthday'],
+                    'issuedByCity' => $params['additionalfields']['Individuals Passport Issuer'],
                     'issuedByCountry' => $existing_details->country->code,
                 )
             )
@@ -547,25 +538,19 @@ class HostControlHelper
 
     /**
      * TciRu specific actions to be performed on domain-tasks
-     * @param $whmcs_user_id
+     * @param $params
      * @param $api_client
      * @return bool|mixed
      */
-    public static function tciru_process($whmcs_user_id, $api_client)
+    public static function tciru_process($params, $api_client)
     {
-        $add_fields = HostControlHelper::get_whmcs_client_additional_fields($whmcs_user_id);
-        if(! is_array($add_fields))
-        {
-            return array('error' => 'Could not get customer custom fields, have they been setup? See Hostcontrol module docs');
-        }
-
-        $contact = HostControlHelper::get_hostcontrol_customer_contact($whmcs_user_id, $api_client);
+        $contact = HostControlHelper::get_hostcontrol_customer_contact($params["userid"], $api_client);
         if(is_array($contact) && ! empty($contact['error']))
         {
             return $contact;
         }
 
-        return HostControlHelper::update_contact_add_ru_idnumber($contact->id, $contact, $add_fields, $api_client);
+        return HostControlHelper::update_contact_add_ru_properties($contact->id, $contact, $params, $api_client);
     }
 
     /**

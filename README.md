@@ -18,14 +18,9 @@
  - Added BackOffice contact-functionality
  - On registration of a .ru-domain, extra contact data will be synced to Hostcontrol
  - To setup the extra functionality features:
-   - Login to the WHMCS Admin panel
-   - Go to setup -> Custom Client Fields
-   - Add three new custom fields in this order:
-     - idnumber
-     - idnumber_issued_date
-     - id_owner_date_of_birth
-   - Make sure these are the LAST THREE custom fields (e.g. give them a display order of 95, 96, 97)
-   - The date fields can have this regex `/^\d{4}-\d{2}-\d{4}$/`
+   - Create a new order with a new .ru domain
+     - Make sure all of the additional fields shown by WHMCS are filled in
+     - Make sure the registrant is at least 18 years old
 
 ###### July 30, 2015
  - Tested v6.0 compatibility

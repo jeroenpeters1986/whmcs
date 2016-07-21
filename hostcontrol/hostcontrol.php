@@ -107,6 +107,8 @@ function hostcontrol_RegisterDomain($params = array())
     $api_client = new HostControlAPIClient(HostControlHelper::getApiUrl($params), $params['ApiKey']);
     $domainname = strtolower($params["sld"] . "." . $params["tld"]);
 
+    HostControlHelper::debugLog($params, 'register-domain-dingen', $params, $domainname);
+
     /* Get or create BackOffice customer ID */
     try
     {
@@ -120,7 +122,7 @@ function hostcontrol_RegisterDomain($params = array())
     /* Special TciRU regulations */
     if(in_array($params["tld"], HostControlHelper::tld_extra_info()))
     {
-        $updated_contact = HostControlHelper::tciru_process($params['userid'], $api_client);
+        $updated_contact = HostControlHelper::tciru_process($params, $api_client);
         if(is_array($updated_contact))
         {
             return $updated_contact;
@@ -142,7 +144,7 @@ function hostcontrol_RegisterDomain($params = array())
     catch(HostControlAPIClientError $e)
     {
         $request = array($hostcontrol_customer_id, $domainname, $interval, $privacy_protect);
-        HostControlHelper::debugLog($params, 'register-domain', $request, $e);
+        HostControlHelper::debugLog($params, 'register-domain-exception', $request, $e);
 
         return array('error' => $e->getMessage());
     }
