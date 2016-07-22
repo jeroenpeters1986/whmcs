@@ -17,7 +17,8 @@
 ###### July 22, 2016
  - Added BackOffice contact-functionality
  - On registration of a .ru-domain, extra contact data will be synced to Hostcontrol
- - To setup the extra functionality features:
+ - To benifit of the extra .ru functionality:
+   - Make sure you have WHMCS 6+
    - Create a new order with a new .ru domain
      - Make sure all of the additional fields shown by WHMCS are filled in
      - Make sure the registrant is at least 18 years old
